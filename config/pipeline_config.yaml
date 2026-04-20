@@ -1,0 +1,62 @@
+api:
+  base_url: "https://api.coingecko.com/api/v3"
+  endpoints:
+    markets: "/coins/markets"
+  params:
+    vs_currency: "usd"
+    order: "market_cap_desc"
+    per_page: 100
+    page: 1
+    sparkline: false
+    price_change_percentage: "24h,7d"
+  poll_interval_seconds: 60
+  max_retries: 3
+  retry_backoff_seconds: 5
+
+storage:
+  bronze_path: "/tmp/crypto_pipeline/bronze"
+  silver_path: "/tmp/crypto_pipeline/silver"
+  gold_path: "/tmp/crypto_pipeline/gold"
+  partition_cols: ["year", "month", "day", "hour"]
+
+databricks:
+  # Serverless compute — no cluster config needed
+  # Volumes path when running inside Databricks
+  volume_root: "/Volumes/crypto_catalog/crypto_schema"
+  bronze_volume: "/Volumes/crypto_catalog/crypto_schema/bronze"
+  silver_volume: "/Volumes/crypto_catalog/crypto_schema/silver"
+
+snowflake:
+  account: "${SNOWFLAKE_ACCOUNT}"
+  user: "${SNOWFLAKE_USER}"
+  password: "${SNOWFLAKE_PASSWORD}"
+  warehouse: "CRYPTO_WH"
+  database: "CRYPTO_DB"
+  schema: "GOLD"
+  role: "SYSADMIN"
+  tables:
+    fact: "FACT_MARKET_SNAPSHOT"
+    dim_coin: "DIM_COIN"
+    dim_date: "DIM_DATE"
+
+data_quality:
+  rules:
+    - column: "current_price"
+      check: "not_null"
+    - column: "current_price"
+      check: "greater_than"
+      value: 0
+    - column: "coin_id"
+      check: "not_null"
+    - column: "market_cap"
+      check: "not_null"
+    - column: "total_volume"
+      check: "greater_than"
+      value: 0
+  max_null_pct_allowed: 5.0
+  max_duplicate_pct_allowed: 1.0
+
+logging:
+  level: "INFO"
+  format: "%(asctime)s | %(levelname)s | %(name)s | %(message)s"
+  log_file: "/tmp/crypto_pipeline/logs/pipeline.log"

@@ -1,0 +1,35 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+build/
+.venv/
+venv/
+.env
+
+# Pipeline data (never commit raw data)
+/tmp/crypto_pipeline/
+*.parquet
+*.json
+*.log
+
+# Secrets — NEVER commit these
+.env
+secrets.yaml
+snowflake_creds.yaml
+*credentials*
+*password*
+
+# IDE
+.vscode/
+.idea/
+*.iml
+
+# Jupyter
+.ipynb_checkpoints/
+*.ipynb
+
+# OS
+.DS_Store
+Thumbs.db

@@ -1,0 +1,17 @@
+# Core
+requests>=2.31.0
+pyyaml>=6.0.1
+
+# PySpark (for local execution — Databricks provides its own)
+pyspark>=3.5.0
+
+# Snowflake
+snowflake-connector-python>=3.6.0
+snowflake-connector-python[pandas]>=3.6.0
+
+# Data processing
+pandas>=2.1.0
+pyarrow>=14.0.0
+
+# Scheduling (optional, for local continuous polling)
+APScheduler>=3.10.4
