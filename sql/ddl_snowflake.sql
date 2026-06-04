@@ -85,7 +85,7 @@ COMMENT = 'Date/time dimension — granularity is 1 hour';
 -- ────────────────────────────────────────────────
 
 CREATE TABLE IF NOT EXISTS FACT_MARKET_SNAPSHOT (
-    snapshot_id                 VARCHAR(64)   NOT NULL PRIMARY KEY,   -- ingestion_id + coin_id
+    snapshot_id                 VARCHAR(256)  NOT NULL PRIMARY KEY,   -- ingestion_id + coin_id
     coin_sk                     NUMBER        NOT NULL REFERENCES DIM_COIN(coin_sk),
     date_sk                     NUMBER        NOT NULL REFERENCES DIM_DATE(date_sk),
     ingestion_id                VARCHAR(64),
@@ -173,34 +173,30 @@ COMMENT = 'Staging — raw Silver data before Gold merge';
 
 USE SCHEMA GOLD;
 
--- Populate DIM_DATE for a given timestamp
-CREATE OR REPLACE PROCEDURE SP_POPULATE_DIM_DATE(p_ts TIMESTAMP_TZ)
+-- Populate DIM_DATE from staging data
+CREATE OR REPLACE PROCEDURE SP_POPULATE_DIM_DATE()
 RETURNS STRING
 LANGUAGE SQL
 AS
 $$
-DECLARE
-    v_sk   NUMBER;
-    v_hour TIMESTAMP_TZ;
 BEGIN
-    v_hour := DATE_TRUNC('hour', p_ts);
-    v_sk   := TO_NUMBER(TO_CHAR(v_hour, 'YYYYMMDDHH24'));
-
     MERGE INTO DIM_DATE AS tgt
     USING (
-        SELECT
-            :v_sk                                          AS date_sk,
-            :v_hour                                        AS snapshot_hour,
-            DATE(:v_hour)                                  AS date_actual,
-            YEAR(:v_hour)                                  AS year,
-            QUARTER(:v_hour)                               AS quarter,
-            MONTH(:v_hour)                                 AS month,
-            MONTHNAME(:v_hour)                             AS month_name,
-            DAY(:v_hour)                                   AS day_of_month,
-            DAYOFWEEK(:v_hour)                             AS day_of_week,
-            DAYNAME(:v_hour)                               AS day_name,
-            HOUR(:v_hour)                                  AS hour_of_day,
-            DAYOFWEEK(:v_hour) IN (1, 7)                   AS is_weekend
+        SELECT DISTINCT
+            TO_NUMBER(TO_CHAR(DATE_TRUNC('hour', batch_ingested_at), 'YYYYMMDDHH24')) AS date_sk,
+            DATE_TRUNC('hour', batch_ingested_at)                                      AS snapshot_hour,
+            DATE(batch_ingested_at)                                                    AS date_actual,
+            YEAR(batch_ingested_at)                                                    AS year,
+            QUARTER(batch_ingested_at)                                                 AS quarter,
+            MONTH(batch_ingested_at)                                                   AS month,
+            MONTHNAME(batch_ingested_at)                                               AS month_name,
+            DAY(batch_ingested_at)                                                     AS day_of_month,
+            DAYOFWEEK(batch_ingested_at)                                               AS day_of_week,
+            DAYNAME(batch_ingested_at)                                                 AS day_name,
+            HOUR(batch_ingested_at)                                                    AS hour_of_day,
+            DAYOFWEEK(batch_ingested_at) IN (0, 6)                                     AS is_weekend
+        FROM STAGING.STG_MARKET_SNAPSHOT
+        WHERE batch_ingested_at IS NOT NULL
     ) AS src
     ON tgt.date_sk = src.date_sk
     WHEN NOT MATCHED THEN INSERT VALUES (
@@ -210,7 +206,7 @@ BEGIN
         src.hour_of_day, src.is_weekend
     );
 
-    RETURN 'DIM_DATE populated for ' || :v_hour;
+    RETURN 'DIM_DATE populated from STAGING.';
 END;
 $$;
 
@@ -224,11 +220,14 @@ $$
 BEGIN
     MERGE INTO GOLD.DIM_COIN AS tgt
     USING (
-        SELECT DISTINCT
-            coin_id, symbol, name,
-            ath, atl, ath_date, atl_date,
-            circulating_supply, total_supply, max_supply
-        FROM STAGING.STG_MARKET_SNAPSHOT
+        SELECT * FROM (
+            SELECT
+                coin_id, symbol, name,
+                ath, atl, ath_date, atl_date,
+                circulating_supply, total_supply, max_supply,
+                ROW_NUMBER() OVER(PARTITION BY coin_id ORDER BY batch_ingested_at DESC) as rn
+            FROM STAGING.STG_MARKET_SNAPSHOT
+        ) WHERE rn = 1
     ) AS src
     ON tgt.coin_id = src.coin_id
     WHEN MATCHED THEN UPDATE SET

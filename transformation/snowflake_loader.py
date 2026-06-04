@@ -123,6 +123,7 @@ def load_staging(conn, df: pd.DataFrame, logger) -> int:
             auto_create_table=False,
             overwrite=False,
             quote_identifiers=False,
+            use_logical_type=True,
         )
         logger.info(f"Staging loaded: {nrows:,} rows in {nchunks} chunk(s).")
         return nrows
@@ -147,10 +148,9 @@ def run_gold_procedures(conn, logger):
         result = cursor.fetchone()
         logger.info(f"DIM_COIN: {result[0]}")
 
-        # 2. Populate DIM_DATE for current hour
-        current_ts = datetime.now(timezone.utc).isoformat()
-        logger.info(f"Running SP_POPULATE_DIM_DATE for {current_ts} ...")
-        cursor.execute(f"CALL SP_POPULATE_DIM_DATE('{current_ts}'::TIMESTAMP_TZ)")
+        # 2. Populate DIM_DATE from staging
+        logger.info("Running SP_POPULATE_DIM_DATE ...")
+        cursor.execute("CALL SP_POPULATE_DIM_DATE()")
         result = cursor.fetchone()
         logger.info(f"DIM_DATE: {result[0]}")
 

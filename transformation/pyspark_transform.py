@@ -245,11 +245,11 @@ def write_silver(df: DataFrame, silver_path: str, logger):
     """Write cleaned DataFrame as partitioned Parquet to Silver layer."""
     (
         df.write
-        .mode("append")
+        .mode("overwrite")
         .partitionBy("year", "month", "day", "hour")
         .parquet(silver_path)
     )
-    logger.info(f"Silver Parquet written → {silver_path}")
+    logger.info(f"Silver Parquet written (overwrite) → {silver_path}")
 
 
 # ──────────────────────────────────────────────

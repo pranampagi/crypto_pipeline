@@ -111,6 +111,28 @@ def check_greater_than(df: DataFrame, column: str, value: float) -> DQCheckResul
     )
 
 
+def check_greater_than_or_equal(df: DataFrame, column: str, value: float) -> DQCheckResult:
+    """Ensure all values in a column are greater than or equal to a threshold."""
+    total = df.count()
+    failed_count = df.filter(
+        F.col(column).isNull() | (F.col(column) < value)
+    ).count()
+    fail_pct = (failed_count / total * 100) if total > 0 else 0.0
+    passed = failed_count == 0
+
+    return DQCheckResult(
+        check_name=f"gte_{column}_{value}",
+        column=column,
+        check_type="GREATER_THAN_OR_EQUAL",
+        passed=passed,
+        total_records=total,
+        failed_records=failed_count,
+        failure_pct=round(fail_pct, 4),
+        threshold=value,
+        message=f"{failed_count} records where {column} < {value}"
+    )
+
+
 def check_no_duplicates(df: DataFrame, key_columns: list, max_dup_pct: float = 1.0) -> DQCheckResult:
     """Check for duplicate rows based on key columns."""
     total = df.count()
@@ -238,7 +260,7 @@ class DataQualityRunner:
 
         # ── Value range checks ──
         results.append(check_greater_than(df, "current_price", 0))
-        results.append(check_greater_than(df, "total_volume", 0))
+        results.append(check_greater_than_or_equal(df, "total_volume", 0))
         results.append(check_greater_than(df, "market_cap", 0))
 
         # ── Pct change sanity (-100% to +10000%) ──
