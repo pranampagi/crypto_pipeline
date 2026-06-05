@@ -17,7 +17,7 @@ SILVER_PATH = "/Volumes/crypto_catalog/crypto_schema/silver"
 
 # Fallback paths (local / non-UC)
 import os
-if not os.path.exists(BRONZE_PATH.replace("/Volumes", "/dbfs/mnt")):
+if not os.path.exists(BRONZE_PATH):
     BRONZE_PATH = "/tmp/crypto_pipeline/bronze"
     SILVER_PATH = "/tmp/crypto_pipeline/silver"
     os.makedirs(SILVER_PATH, exist_ok=True)
@@ -35,6 +35,7 @@ from pyspark.sql import functions as F
 from pyspark.sql.types import DoubleType, LongType
 
 print("Reading Bronze layer ...")
+
 raw_df = (
     spark.read
     .option("multiline", "true")

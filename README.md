@@ -55,12 +55,12 @@ crypto_pipeline/
 │   └── dq_checks.py                # Custom DQ framework (PySpark)
 ├── sql/
 │   ├── ddl_snowflake.sql           # Star schema DDL + stored procedures
-│   └── analytical_queries.sql      # 8 interview-ready analytical queries
+│   └── analytical_queries.sql      # 8 Analytical queries
 ├── notebooks/                      # Databricks Serverless notebooks
 │   ├── 01_bronze_ingestion.py
 │   ├── 02_silver_transformation.py
-│   ├── 03_gold_snowflake_load.py
-│   └── 04_data_quality.py
+│   ├── 03_data_quality.py
+│   └── 04_gold_snowflake_load.py
 ├── utils/
 │   └── helpers.py                  # Config loader, logger, path utils
 ├── requirements.txt
@@ -169,12 +169,12 @@ python transformation/snowflake_loader.py
    ```
    01_bronze_ingestion.py     → Ingest from CoinGecko
    02_silver_transformation.py → PySpark cleanse
-   04_data_quality.py          → Validate Silver
-   03_gold_snowflake_load.py   → Load to Snowflake
+   03_data_quality.py          → Validate Silver
+   04_gold_snowflake_load.py   → Load to Snowflake
    ```
 
 5. **Schedule** Notebook 1 as a Databricks Workflow Job (every 1 hour).
-   Chain Notebooks 2 → 4 → 3 as downstream tasks.
+   Chain Notebooks 2 → 3 → 4 as downstream tasks.
 
 ---
 

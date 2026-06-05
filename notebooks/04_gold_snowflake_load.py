@@ -13,7 +13,7 @@
 
 # COMMAND ----------
 
-# %pip install snowflake-connector-python
+# MAGIC %pip install snowflake-connector-python
 
 # COMMAND ----------
 
@@ -29,24 +29,9 @@
 
 # COMMAND ----------
 
-import os
-
-# Try Databricks Secrets first, fall back to env vars
-def get_secret(scope: str, key: str, env_var: str) -> str:
-    try:
-        return dbutils.secrets.get(scope=scope, key=key)
-    except Exception:
-        val = os.environ.get(env_var, "")
-        if not val:
-            raise EnvironmentError(
-                f"Secret '{key}' not found in scope '{scope}' "
-                f"and env var '{env_var}' is not set."
-            )
-        return val
-
-SNOWFLAKE_ACCOUNT   = get_secret("crypto-pipeline", "snowflake-account",   "SNOWFLAKE_ACCOUNT")
-SNOWFLAKE_USER      = get_secret("crypto-pipeline", "snowflake-user",      "SNOWFLAKE_USER")
-SNOWFLAKE_PASSWORD  = get_secret("crypto-pipeline", "snowflake-password",  "SNOWFLAKE_PASSWORD")
+SNOWFLAKE_ACCOUNT  = "your_snowflake_account_id"
+SNOWFLAKE_USER     = "your_snowflake_username"
+SNOWFLAKE_PASSWORD = "your_snowflake_password"
 
 SF_CONFIG = {
     "account":   SNOWFLAKE_ACCOUNT,
@@ -81,7 +66,8 @@ print(f"Silver records to load: {total_records:,}")
 # COMMAND ----------
 
 SFPARAMS = {
-    "sfURL":       f"{SF_CONFIG['account']}.snowflakecomputing.com",
+    "host":        f"{SF_CONFIG['account']}.snowflakecomputing.com",
+    "port":        "443",
     "sfUser":      SF_CONFIG["user"],
     "sfPassword":  SF_CONFIG["password"],
     "sfDatabase":  SF_CONFIG["database"],
@@ -146,8 +132,7 @@ with snowflake.connector.connect(**SF_CONFIG) as conn:
     print(f"   {r}")
 
     print("2️⃣  Populating DIM_DATE ...")
-    ts = datetime.now(timezone.utc).isoformat()
-    r = run_sf_procedure(conn, f"CALL GOLD.SP_POPULATE_DIM_DATE('{ts}'::TIMESTAMP_TZ)")
+    r = run_sf_procedure(conn, "CALL GOLD.SP_POPULATE_DIM_DATE()")
     print(f"   {r}")
 
     print("3️⃣  Loading FACT_MARKET_SNAPSHOT ...")
@@ -163,7 +148,8 @@ print("\n✅ Gold load procedures complete.")
 # COMMAND ----------
 
 with snowflake.connector.connect(**SF_CONFIG) as conn:
-    conn.cursor().execute("USE DATABASE CRYPTO_DB; USE SCHEMA GOLD;")
+    conn.cursor().execute("USE DATABASE CRYPTO_DB")
+    conn.cursor().execute("USE SCHEMA GOLD")
     for tbl in ["FACT_MARKET_SNAPSHOT", "DIM_COIN", "DIM_DATE"]:
         with conn.cursor() as cur:
             cur.execute(f"SELECT COUNT(*) FROM {tbl}")
@@ -177,7 +163,9 @@ with snowflake.connector.connect(**SF_CONFIG) as conn:
 # COMMAND ----------
 
 with snowflake.connector.connect(**SF_CONFIG) as conn:
-    conn.cursor().execute("USE DATABASE CRYPTO_DB; USE SCHEMA GOLD; USE WAREHOUSE CRYPTO_WH;")
+    conn.cursor().execute("USE DATABASE CRYPTO_DB")
+    conn.cursor().execute("USE SCHEMA GOLD")
+    conn.cursor().execute("USE WAREHOUSE CRYPTO_WH")
     query = """
         WITH latest AS (SELECT MAX(batch_ingested_at) ts FROM FACT_MARKET_SNAPSHOT)
         SELECT dc.name, dc.symbol,
