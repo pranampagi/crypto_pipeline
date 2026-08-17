@@ -4,7 +4,6 @@ A production-grade, end-to-end Data Engineering project ingesting live cryptocur
 market data from the **CoinGecko API**, processing it through a **Bronze → Silver → Gold**
 medallion architecture using **PySpark**, and serving analytics via a **Snowflake** star schema.
 
-Built to align with the **KPI Partners Data Engineer I** role requirements.
 
 ---
 
