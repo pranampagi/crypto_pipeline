@@ -1,6 +1,6 @@
 # Databricks notebook source
 # MAGIC %md
-# MAGIC # 🔍 Notebook 4 — Data Quality Checks (Serverless)
+# MAGIC # 🔍 Notebook 3 — Data Quality Checks (Serverless)
 # MAGIC **Layer**: Silver DataFrame
 # MAGIC **Output**: DQ Report (JSON) + Pass/Fail summary
 # MAGIC

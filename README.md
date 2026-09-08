@@ -180,22 +180,22 @@ python transformation/snowflake_loader.py
 ## 🗄️ Snowflake Star Schema
 
 ```
-          ┌─────────────┐
-          │  DIM_DATE   │
-          │  date_sk PK │
-          └──────┬──────┘
-                 │
+         ┌─────────────┐
+         │  DIM_DATE   │
+         │  date_sk PK │
+         └──────┬──────┘
+                │
 ┌──────────┐    │    ┌──────────────────────────┐
 │ DIM_COIN │────┼────│  FACT_MARKET_SNAPSHOT    │
-│ coin_sk  │    │    │  snapshot_id  PK          │
-│ coin_id  │    │    │  coin_sk      FK          │
-│ symbol   │    └────│  date_sk      FK          │
-│ name     │         │  current_price            │
-│ ath/atl  │         │  market_cap               │
-└──────────┘         │  total_volume             │
-                     │  price_change_pct_24h     │
-                     │  is_bullish_24h            │
-                     │  ...                       │
+│ coin_sk  │    │    │  snapshot_id  PK         │
+│ coin_id  │    │    │  coin_sk      FK         │
+│ symbol   │    └────│  date_sk      FK         │
+│ name     │         │  current_price           │
+│ ath/atl  │         │  market_cap              │
+└──────────┘         │  total_volume            │
+                     │  price_change_pct_24h    │
+                     │  is_bullish_24h          │
+                     │  ...                     │
                      └──────────────────────────┘
 ```
 

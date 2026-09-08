@@ -1,6 +1,6 @@
 # Databricks notebook source
 # MAGIC %md
-# MAGIC # 🥇 Notebook 3 — Gold Load into Snowflake (Serverless)
+# MAGIC # 🥇 Notebook 4 — Gold Load into Snowflake (Serverless)
 # MAGIC **Pipeline**: Silver Parquet → Snowflake Staging → DIM/FACT Gold Tables
 # MAGIC
 # MAGIC **Compute**: Databricks Serverless — no cluster config needed.
